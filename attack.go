@@ -71,14 +71,15 @@ func PollardsRho(p *Point) *big.Int {
 
 
 	for ! R1.Equal(R2) {
-		R1 = nextPoint(R1)
+		// Tortise
 		a1, b1 = nextab(R1, a1, b1)
+		R1 = nextPoint(R1)
 
+		// Hare
+		a2, b2 = nextab(R2, a2, b2)
 		R2 = nextPoint(R2)
 		a2, b2 = nextab(R2, a2, b2)
-
 		R2 = nextPoint(R2)
-		a2, b2 = nextab(R2, a2, b2)
 
 		if iterationCount.Cmp(upperBound) > 0 {
 			panic("iteration count exceeded")
@@ -87,11 +88,11 @@ func PollardsRho(p *Point) *big.Int {
 	if b2.Cmp(b1) == 0 {
 		return new(big.Int)
 	}
-	// (A - a) / (b - B) mod n
+	// (a2 - a1) / (b1 - b2) mod n
 	numerator := new(big.Int).Sub(a2, a1)
 	numerator.Mod(numerator, p.curve.n)
 
-	denominator := new(big.Int).Sub(b2, b1)
+	denominator := new(big.Int).Sub(b1, b2)
 	denominator.Mod(denominator, p.curve.n)
 	denominator.ModInverse(denominator, p.curve.n)
 	result := numerator.Mul(numerator, denominator)
