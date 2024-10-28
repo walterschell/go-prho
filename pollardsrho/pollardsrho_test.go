@@ -1,16 +1,20 @@
-package main
+package pollardsrho
+
 import (
 	"testing"
+
+	"github.com/walterschell/go-prho/elliptic"
 )
-var tinyParameters = CurveParams{
-	A:     "63",
-	B:     "33",
-	P:     "103",
+
+var tinyParameters = elliptic.CurveParams{
+	A:       "63",
+	B:       "33",
+	P:       "103",
 	BitSize: 7,
-	N: "97",
-	Gx:   "90",
-	Gy:   "2",
-	Name: "tiny",
+	N:       "97",
+	Gx:      "90",
+	Gy:      "2",
+	Name:    "tiny",
 }
 
 func TestPollardsRho(t *testing.T) {

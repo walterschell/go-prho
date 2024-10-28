@@ -1,4 +1,4 @@
-package main
+package field
 
 import (
 	"math/big"
@@ -7,7 +7,7 @@ import (
 
 type Field big.Int
 
-func NewField(p *big.Int) *Field {
+func New(p *big.Int) *Field {
 	result := new(big.Int)
 	result.Set(p)
 	return (*Field)(result)

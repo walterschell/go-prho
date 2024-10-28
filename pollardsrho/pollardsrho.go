@@ -1,12 +1,13 @@
-package main
+package pollardsrho
 
 import (
 	"fmt"
 	"math/big"
+
+	"github.com/walterschell/go-prho/elliptic"
 )
 
-
-func PollardsRho(p *Point) *big.Int {
+func PollardsRho(p *elliptic.Point) *big.Int {
 	// Given P, Q (Points) find x such that xP = Q
 	// Find integers a,b,A,B such that aP + bQ = AP + BQ
 
@@ -16,13 +17,14 @@ func PollardsRho(p *Point) *big.Int {
 	i3 := big.NewInt(3)
 	upperBound := big.NewInt(50)
 
+	N := p.Curve().N()
 
-	P := p.curve.G()
+	P := p.Curve().G()
 	Q := p
 
-	nextPoint := func(pt *Point) *Point {
-		discriminant := new(big.Int)
-		discriminant.Mod(pt.x, i3)
+	nextPoint := func(pt *elliptic.Point) *elliptic.Point {
+		discriminant := pt.X()
+		discriminant.Mod(discriminant, i3)
 		if discriminant.Cmp(i0) == 0 {
 			return pt.Add(P)
 		}
@@ -34,33 +36,32 @@ func PollardsRho(p *Point) *big.Int {
 		}
 		panic("invalid discriminant")
 	}
-	nextab := func(pt *Point, a, b *big.Int) (*big.Int, *big.Int) {
-		discriminant := new(big.Int)
-		discriminant.Mod(pt.x, i3)
+	nextab := func(pt *elliptic.Point, a, b *big.Int) (*big.Int, *big.Int) {
+		discriminant := pt.X()
+		discriminant.Mod(discriminant, i3)
 
 		A := new(big.Int).Set(a)
 		B := new(big.Int).Set(b)
 
-
 		if discriminant.Cmp(i0) == 0 {
-			A.Add(A, i1).Mod(A, p.curve.n)
+			A.Add(A, i1).Mod(A, N)
 			return A, B
 		}
 		if discriminant.Cmp(i1) == 0 {
-			A.Mul(A, i2).Mod(A, p.curve.n)
-			B.Mul(B, i2).Mod(B, p.curve.n)
+			A.Mul(A, i2).Mod(A, N)
+			B.Mul(B, i2).Mod(B, N)
 			return A, B
 		}
 		if discriminant.Cmp(i2) == 0 {
-			B.Add(B, i1).Mod(B, p.curve.n)
+			B.Add(B, i1).Mod(B, N)
 			return A, B
 		}
 		panic("invalid discriminant")
 	}
 
 	iterationCount := new(big.Int)
-	a0 := p.curve.RandomScalar()
-	b0 := p.curve.RandomScalar()
+	a0 := p.Curve().RandomScalar()
+	b0 := p.Curve().RandomScalar()
 
 	R0 := P.Mul(a0).Add(Q.Mul(b0))
 	R1 := nextPoint(R0)
@@ -69,8 +70,7 @@ func PollardsRho(p *Point) *big.Int {
 	R2 := nextPoint(R1)
 	a2, b2 := nextab(R1, a1, b1)
 
-
-	for ! R1.Equal(R2) {
+	for !R1.Equal(R2) {
 		// Tortise
 		a1, b1 = nextab(R1, a1, b1)
 		R1 = nextPoint(R1)
@@ -90,17 +90,15 @@ func PollardsRho(p *Point) *big.Int {
 	}
 	// (a2 - a1) / (b1 - b2) mod n
 	numerator := new(big.Int).Sub(a2, a1)
-	numerator.Mod(numerator, p.curve.n)
+	numerator.Mod(numerator, N)
 
 	denominator := new(big.Int).Sub(b1, b2)
-	denominator.Mod(denominator, p.curve.n)
-	denominator.ModInverse(denominator, p.curve.n)
+	denominator.Mod(denominator, N)
+	denominator.ModInverse(denominator, N)
 	result := numerator.Mul(numerator, denominator)
-	result.Mod(result, p.curve.n)
+	result.Mod(result, N)
 	return result
 }
-
-
 
 func main() {
 	fmt.Println("Hello, World!")

@@ -1,31 +1,33 @@
-package main
+package elliptic
 
 import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+
+	"github.com/walterschell/go-prho/field"
 )
 
 type CurveParams struct {
-	P string
-	N string
-	A string
-	B string
-	Gx string
-	Gy string
+	P       string
+	N       string
+	A       string
+	B       string
+	Gx      string
+	Gy      string
 	BitSize int
-	Name string
+	Name    string
 }
 
 type Curve struct {
-	p *Field
-	n *big.Int
-	a *big.Int
-	b *big.Int
-	gx *big.Int
-	gy *big.Int
+	p       *field.Field
+	n       *big.Int
+	a       *big.Int
+	b       *big.Int
+	gx      *big.Int
+	gy      *big.Int
 	bitSize int
-	params *CurveParams
+	params  *CurveParams
 }
 
 func (c *CurveParams) Curve() (*Curve, error) {
@@ -54,21 +56,24 @@ func (c *CurveParams) Curve() (*Curve, error) {
 		return nil, fmt.Errorf("error parsing Gy")
 	}
 	result := &Curve{
-		p: NewField(p),
-		n: n,
-		a: a,
-		b: b,
-		gx: gx,
-		gy: gy,
+		p:       field.New(p),
+		n:       n,
+		a:       a,
+		b:       b,
+		gx:      gx,
+		gy:      gy,
 		bitSize: c.BitSize,
-		params: c,
+		params:  c,
 	}
-
 
 	if !result.IsOnCurve(gx, gy) {
 		return nil, fmt.Errorf("invalid generator point")
 	}
 	return result, nil
+}
+
+func (c *Curve) N() *big.Int {
+	return new(big.Int).Set(c.n)
 }
 
 func (c *Curve) IsOnCurve(x, y *big.Int) bool {
@@ -83,23 +88,23 @@ func (c *Curve) IsOnCurve(x, y *big.Int) bool {
 
 type Point struct {
 	curve *Curve
-	x *big.Int
-	y *big.Int
+	x     *big.Int
+	y     *big.Int
 }
 
 func (c *Curve) G() *Point {
 	return &Point{
 		curve: c,
-		x: c.gx,
-		y: c.gy,
+		x:     c.gx,
+		y:     c.gy,
 	}
 }
 
 func (c *Curve) Infinity() *Point {
 	return &Point{
 		curve: c,
-		x: new(big.Int),
-		y: new(big.Int),
+		x:     new(big.Int),
+		y:     new(big.Int),
 	}
 }
 
@@ -124,7 +129,6 @@ func (p *Point) IsOnCurve() bool {
 func (p *Point) Equal(q *Point) bool {
 	return p.curve == q.curve && p.x.Cmp(q.x) == 0 && p.y.Cmp(q.y) == 0
 }
-
 
 func (p *Point) Add(q *Point) *Point {
 	if p.curve != q.curve {
@@ -173,11 +177,11 @@ func (p *Point) Add(q *Point) *Point {
 	y := p.curve.p.Sub(p.x, x)
 	p.curve.p.InplaceMul(y, slope)
 	p.curve.p.InplaceSub(y, p.y)
-	
+
 	result := &Point{
 		curve: p.curve,
-		x: x,
-		y: y,
+		x:     x,
+		y:     y,
 	}
 	if !result.IsOnCurve() {
 		panic("result not on curve")
@@ -200,8 +204,8 @@ func (p *Point) Mul(k *big.Int) *Point {
 func (p *Point) Neg() *Point {
 	return &Point{
 		curve: p.curve,
-		x: p.x,
-		y: p.curve.p.Neg(p.y),
+		x:     p.x,
+		y:     p.curve.p.Neg(p.y),
 	}
 }
 
@@ -217,14 +221,20 @@ func (p *Point) String() string {
 	return fmt.Sprintf("(%v, %v)", p.x, p.y)
 }
 
+func (p *Point) X() *big.Int {
+	return new(big.Int).Set(p.x)
+}
 
+func (p *Point) Y() *big.Int {
+	return new(big.Int).Set(p.y)
+}
 
 var C64Params = &CurveParams{
-	A: "0x197eacf564277a28",
-	B: "0x2869c4a069451233",
-	P: "0xfc477ce0dee80f77",
+	A:       "0x197eacf564277a28",
+	B:       "0x2869c4a069451233",
+	P:       "0xfc477ce0dee80f77",
 	BitSize: 64,
-	N: "0xfc477ce09e86adfb",
-	Gx: "0x56853b2bd6052661",
-	Gy: "0xcb116939be0710c9",
+	N:       "0xfc477ce09e86adfb",
+	Gx:      "0x56853b2bd6052661",
+	Gy:      "0xcb116939be0710c9",
 }

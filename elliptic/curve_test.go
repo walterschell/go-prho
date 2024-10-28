@@ -1,4 +1,4 @@
-package main
+package elliptic
 import (
 	"testing"
 )
